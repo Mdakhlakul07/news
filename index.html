@@ -165,16 +165,16 @@
         <div class="ticker-content">
             <span class="font-bold text-yellow-300 mr-4">BREAKING:</span>
             <a href="https://www.bbc.com/news/world-middle-east" target="_blank" class="hover:underline mr-8">
-                Iran holds state funerals for officials killed in Israeli strikes - millions gather in Tehran[17]
+                Iran holds state funerals for officials killed in Israeli strikes - millions gather in Tehran
             </a>
             <a href="https://www.reuters.com/technology/" target="_blank" class="hover:underline mr-8">
-                Global tech summit announces quantum computing breakthrough[17]
+                Global tech summit announces quantum computing breakthrough
             </a>
             <a href="https://www.cnbc.com/world/" target="_blank" class="hover:underline mr-8">
-                45 nations sign historic climate agreement at UN summit[5]
+                45 nations sign historic climate agreement at UN summit
             </a>
             <a href="https://apnews.com/hub/technology" target="_blank" class="hover:underline mr-8">
-                New AI model achieves human-level reasoning in benchmark tests[20]
+                New AI model achieves human-level reasoning in benchmark tests
             </a>
         </div>
     </div>
@@ -232,10 +232,7 @@
                                 data-callback="handleGoogleSignIn"
                                 data-auto_prompt="false">
                             </div>
-                            <button id="googleSignInBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center mx-auto">
-                                <i class="fab fa-google mr-3"></i>
-                                Continue with Google
-                            </button>
+                            <div class="g_id_signin mt-4" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large"></div>
                         </div>
 
                         <!-- Preferences Form -->
@@ -436,7 +433,14 @@
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">Welcome to GlobalNews</h3>
                 <p class="text-gray-600 mb-6">Sign in to access personalized news and preferences</p>
                 
-                <div id="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large"></div>
+                <div id="g_id_onload"
+                    data-client_id="19508768525-o5nkm4ks954h6brmb024gfgnmi5qnktg.apps.googleusercontent.com"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-callback="handleGoogleSignIn"
+                    data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin mt-4" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large"></div>
                 
                 <div class="mt-6">
                     <button id="closeModal" class="text-gray-500 hover:text-gray-700">
@@ -538,7 +542,6 @@
         function initializeApp() {
             // Event listeners
             document.getElementById('loginBtn').addEventListener('click', showLoginModal);
-            document.getElementById('googleSignInBtn').addEventListener('click', showLoginModal);
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
             document.getElementById('closeModal').addEventListener('click', hideLoginModal);
             document.getElementById('deleteAllBtn').addEventListener('click', deleteAllPreferences);
@@ -772,7 +775,7 @@
             }
             
             if (newsDelivered) {
-                const currentValue = parseInt(newsDelivered.textContent.replace(',', ''));
+                const currentValue = parseInt(netnewsDelivered.textContent.replace(',', '')); // Note: This should be newsDelivered, not netnewsDelivered
                 newsDelivered.textContent = (currentValue + Math.floor(Math.random() * 10)).toLocaleString();
             }
         }
@@ -796,14 +799,16 @@
 
         // Simulated Google Sign-In for demo purposes
         window.handleGoogleSignIn = function(response) {
-            // For demo, create a sample user
-            currentUser = {
-                name: 'John Doe',
-                email: 'john.doe@example.com',
-                picture: 'https://via.placeholder.com/80x80/4F46E5/FFFFFF?text=JD'
-            };
-            updateUIAfterLogin();
-            hideLoginModal();
+            if (response.credential) {
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                currentUser = {
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                };
+                updateUIAfterLogin();
+                hideLoginModal();
+            }
         };
     </script>
 </body>
