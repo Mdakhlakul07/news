@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalNews Digest Pro - Your Personalized News Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --secondary: #059669;
+            --accent: #dc2626;
+            --dark: #1e293b;
+            --success: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 50%, #3730a3 100%);
+        }
+        
+        .breaking-news-ticker {
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .ticker-content {
+            display: inline-block;
+            animation: scroll-left 60s linear infinite;
+        }
+        
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .news-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .live-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .preference-toggle {
+            transition: all 0.3s ease;
+        }
+        
+        .preference-toggle:checked {
+            background-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header-gradient text-white shadow-xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                        <i class="fas fa-newspaper text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">GlobalNews Digest</h1>
+                        <p class="text-blue-200 text-sm">Your Personalized News Hub</p>
+                    </div>
+                </div>
+                
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#home" class="hover:text-blue-200 transition flex items-center">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                    <a href="#trending" class="hover:text-blue-200 transition flex items-center">
+                        <i class="fas fa-fire mr-2"></i>Trending
+                    </a>
+                    <a href="#categories" class="hover:text-blue-200 transition flex items-center">
+                        <i class="fas fa-list mr-2"></i>Categories
+                    </a>
+                    <a href="https://mdakhlakul07.github.io/me/" class="hover:text-blue-200 transition flex items-center" target="_blank">
+                        <i class="fas fa-user mr-2"></i>Contact
+                    </a>
+                </nav>
+                
+                <div class="flex items-center space-x-4">
+                    <div id="userSection" class="hidden flex items-center space-x-3">
+                        <img id="userPhoto" class="w-8 h-8 rounded-full" src="" alt="User">
+                        <span id="userName" class="font-medium"></span>
+                        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
+                    <button id="loginBtn" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breaking News Ticker -->
+    <div class="breaking-news-ticker text-white py-3">
+        <div class="ticker-content">
+            <span class="font-bold text-yellow-300 mr-4">BREAKING:</span>
+            <a href="https://www.bbc.com/news/world-middle-east" target="_blank" class="hover:underline mr-8">
+                Iran holds state funerals for officials killed in Israeli strikes - millions gather in Tehran[17]
+            </a>
+            <a href="https://www.reuters.com/technology/" target="_blank" class="hover:underline mr-8">
+                Global tech summit announces quantum computing breakthrough[17]
+            </a>
+            <a href="https://www.cnbc.com/world/" target="_blank" class="hover:underline mr-8">
+                45 nations sign historic climate agreement at UN summit[5]
+            </a>
+            <a href="https://apnews.com/hub/technology" target="_blank" class="hover:underline mr-8">
+                New AI model achieves human-level reasoning in benchmark tests[20]
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- KPI Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-2">Total Users</h3>
+                <p class="text-3xl font-bold" id="totalUsers">12,847</p>
+                <p class="text-sm opacity-80">+5.2% this week</p>
+            </div>
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-2">Active Subscriptions</h3>
+                <p class="text-3xl font-bold" id="activeSubscriptions">8,234</p>
+                <p class="text-sm opacity-80">+12.8% this month</p>
+            </div>
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-2">News Delivered</h3>
+                <p class="text-3xl font-bold" id="newsDelivered">156,892</p>
+                <p class="text-sm opacity-80">Last 24 hours</p>
+            </div>
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold mb-2">Global Sources</h3>
+                <p class="text-3xl font-bold">847</p>
+                <p class="text-sm opacity-80 live-indicator">Live RSS Feeds</p>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Preferences Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- News Preferences -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="header-gradient py-4 px-6">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-cog mr-3 text-yellow-300"></i>
+                            Personalize Your News Experience
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Login Gate -->
+                        <div id="loginGate" class="text-center py-12">
+                            <div class="mb-6">
+                                <i class="fas fa-lock text-6xl text-gray-300"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">Unlock Personalized News</h3>
+                            <p class="text-gray-600 mb-6">Sign in with your Google account to customize your news preferences and receive personalized newsletters</p>
+                            <div id="g_id_onload"
+                                data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                                data-context="signin"
+                                data-ux_mode="popup"
+                                data-callback="handleGoogleSignIn"
+                                data-auto_prompt="false">
+                            </div>
+                            <button id="googleSignInBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold flex items-center mx-auto">
+                                <i class="fab fa-google mr-3"></i>
+                                Continue with Google
+                            </button>
+                        </div>
+
+                        <!-- Preferences Form -->
+                        <div id="preferencesPanel" class="hidden">
+                            <form id="newsPreferencesForm" class="space-y-8">
+                                <!-- Categories -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-tags mr-3 text-blue-600"></i>
+                                        News Categories
+                                    </h3>
+                                    <div class="category-grid" id="categoriesGrid">
+                                        <!-- Categories will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Regions & Countries -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-globe mr-3 text-blue-600"></i>
+                                        Preferred Regions
+                                    </h3>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <select id="regionSelect" class="p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Select Region</option>
+                                            <option value="global">🌍 Global</option>
+                                            <option value="americas">🌎 Americas</option>
+                                            <option value="europe">🇪🇺 Europe</option>
+                                            <option value="asia">🌏 Asia Pacific</option>
+                                            <option value="africa">🌍 Africa</option>
+                                            <option value="middle-east">🕌 Middle East</option>
+                                        </select>
+                                        <select id="countrySelect" class="p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            <!-- Countries will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Frequency & Count -->
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4">Newsletter Frequency</h3>
+                                        <div class="space-y-3">
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50">
+                                                <input type="radio" name="frequency" value="hourly" class="preference-toggle">
+                                                <span class="ml-3">⏱️ Hourly Updates</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50">
+                                                <input type="radio" name="frequency" value="daily" class="preference-toggle" checked>
+                                                <span class="ml-3">📅 Daily Digest</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50">
+                                                <input type="radio" name="frequency" value="weekly" class="preference-toggle">
+                                                <span class="ml-3">🗓️ Weekly Summary</span>
+                                            </label>
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50">
+                                                <input type="radio" name="frequency" value="monthly" class="preference-toggle">
+                                                <span class="ml-3">📊 Monthly Report</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4">Articles Per Digest</h3>
+                                        <select id="newsCount" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            <option value="1">1 Top Story</option>
+                                            <option value="3">3 Key Stories</option>
+                                            <option value="5" selected>5 Essential Updates</option>
+                                            <option value="10">10 Comprehensive News</option>
+                                            <option value="15">15 Full Coverage</option>
+                                            <option value="20">20 Complete Digest</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-wrap gap-4 pt-6">
+                                    <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-4 px-6 rounded-lg hover:opacity-90 transition">
+                                        <i class="fas fa-save mr-2"></i>Save Preferences
+                                    </button>
+                                    <button type="button" id="deleteAllBtn" class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold py-4 px-6 rounded-lg hover:opacity-90 transition">
+                                        <i class="fas fa-trash-alt mr-2"></i>Delete All Preferences
+                                    </button>
+                                    <button type="button" id="sendNowBtn" class="flex-1 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold py-4 px-6 rounded-lg hover:opacity-90 transition live-indicator">
+                                        <i class="fas fa-paper-plane mr-2"></i>Send Newsletter Now
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live News Feed -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="header-gradient py-4 px-6">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-bolt mr-3 text-yellow-300"></i>
+                            Live News Feed
+                            <span class="ml-3 bg-red-500 text-xs px-2 py-1 rounded-full live-indicator">LIVE</span>
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div id="liveNewsFeed" class="space-y-6">
+                            <!-- Live news will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- User Profile -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="header-gradient py-4 px-6">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-user-circle mr-3 text-yellow-300"></i>
+                            Your Profile
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div id="guestProfile" class="text-center py-8">
+                            <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-user text-3xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Guest User</h3>
+                            <p class="text-gray-600 mt-2">Sign in to unlock all features</p>
+                        </div>
+                        
+                        <div id="userProfile" class="hidden">
+                            <div class="text-center mb-6">
+                                <img id="profilePhoto" class="w-20 h-20 rounded-full mx-auto mb-4" src="" alt="Profile">
+                                <h3 id="profileName" class="text-xl font-bold text-gray-800"></h3>
+                                <p id="profileEmail" class="text-gray-600"></p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Subscription Status</h4>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Active</span>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Next Newsletter</h4>
+                                    <p class="text-gray-600" id="nextNewsletter">Tomorrow 9:00 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="header-gradient py-4 px-6">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-chart-line mr-3 text-yellow-300"></i>
+                            Your Reading Analytics
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6">
+                        <canvas id="readingChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="header-gradient py-4 px-6">
+                        <h2 class="text-xl font-bold text-white flex items-center">
+                            <i class="fas fa-bolt mr-3 text-yellow-300"></i>
+                            Quick Actions
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6 space-y-4">
+                        <button class="w-full bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition">
+                            <i class="fas fa-bookmark text-blue-600 mr-3"></i>
+                            <span class="font-medium">Saved Articles</span>
+                        </button>
+                        <button class="w-full bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition">
+                            <i class="fas fa-history text-green-600 mr-3"></i>
+                            <span class="font-medium">Reading History</span>
+                        </button>
+                        <button class="w-full bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition">
+                            <i class="fas fa-bell text-purple-600 mr-3"></i>
+                            <span class="font-medium">Notifications</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Welcome to GlobalNews</h3>
+                <p class="text-gray-600 mb-6">Sign in to access personalized news and preferences</p>
+                
+                <div id="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large"></div>
+                
+                <div class="mt-6">
+                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times mr-2"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let newsData = [];
+        let userPreferences = {};
+
+        // Comprehensive News Categories
+        const newsCategories = [
+            'Breaking News', 'Politics', 'World News', 'Business', 'Technology',
+            'Science', 'Health', 'Environment', 'Sports', 'Entertainment',
+            'Arts & Culture', 'Education', 'Travel', 'Food & Lifestyle',
+            'Fashion', 'Weather', 'Crime', 'Local News', 'Opinion',
+            'Finance', 'Real Estate', 'Automotive', 'Gaming', 'Space',
+            'Cryptocurrency', 'AI & Machine Learning', 'Cybersecurity',
+            'Social Media', 'Music', 'Movies', 'Celebrity', 'Religion',
+            'History', 'Military & Defense'
+        ];
+
+        // Countries List
+        const countries = [
+            'Global', 'United States', 'United Kingdom', 'Canada', 'Australia',
+            'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Belgium',
+            'Switzerland', 'Austria', 'Norway', 'Sweden', 'Denmark', 'Finland',
+            'Ireland', 'Portugal', 'Poland', 'Czech Republic', 'Hungary',
+            'Greece', 'Turkey', 'Russia', 'Ukraine', 'Israel', 'Saudi Arabia',
+            'UAE', 'India', 'China', 'Japan', 'South Korea', 'Singapore',
+            'Thailand', 'Malaysia', 'Indonesia', 'Philippines', 'Vietnam',
+            'Bangladesh', 'Pakistan', 'Sri Lanka', 'Nepal', 'Myanmar',
+            'South Africa', 'Nigeria', 'Kenya', 'Egypt', 'Morocco',
+            'Brazil', 'Argentina', 'Chile', 'Colombia', 'Mexico',
+            'Peru', 'Venezuela', 'New Zealand'
+        ];
+
+        // Current News Data (Real-time from search results)
+        const liveNewsData = [
+            {
+                title: "Iran holds state funerals for officials killed in Israeli strikes",
+                summary: "Millions of people have descended on Tehran to bid farewell to those killed in the 12-day Israeli offensive. Iran's Supreme Leader adviser appears in public for first time since being injured.",
+                category: "World News",
+                url: "https://www.bbc.com/news/world-middle-east",
+                time: "2 hours ago",
+                source: "International Reports"
+            },
+            {
+                title: "Global tech summit announces quantum computing breakthrough",
+                summary: "Leading tech companies unveiled revolutionary AI advancements and quantum computing systems that could change how we interact with technology.",
+                category: "Technology",
+                url: "https://www.reuters.com/technology/",
+                time: "4 hours ago",
+                source: "Tech News"
+            },
+            {
+                title: "45 nations sign historic climate agreement at UN summit",
+                summary: "World leaders attended UN summit without U.S. as $4 trillion development gap threatens global progress goals. Major climate breakthrough achieved.",
+                category: "Environment",
+                url: "https://www.cnbc.com/world/",
+                time: "6 hours ago",
+                source: "Global Reports"
+            },
+            {
+                title: "India's power demand expected to triple by 2035",
+                summary: "Driven by electric vehicles, data centres, and expanding railway infrastructure, India faces massive energy transformation challenges.",
+                category: "Business",
+                url: "https://www.reuters.com/business/",
+                time: "8 hours ago",
+                source: "Economic Times"
+            },
+            {
+                title: "New AI model achieves human-level reasoning in benchmark tests",
+                summary: "Researchers unveiled a breakthrough AI system that demonstrates unprecedented reasoning capabilities, passing complex tests previously only solvable by humans.",
+                category: "AI & Machine Learning",
+                url: "https://apnews.com/hub/technology",
+                time: "10 hours ago",
+                source: "Science Daily"
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            populateCategories();
+            populateCountries();
+            loadLiveNews();
+            initializeChart();
+            updateKPIs();
+            setInterval(updateKPIs, 30000); // Update KPIs every 30 seconds
+        });
+
+        function initializeApp() {
+            // Event listeners
+            document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+            document.getElementById('googleSignInBtn').addEventListener('click', showLoginModal);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('closeModal').addEventListener('click', hideLoginModal);
+            document.getElementById('deleteAllBtn').addEventListener('click', deleteAllPreferences);
+            document.getElementById('sendNowBtn').addEventListener('click', sendNewsletterNow);
+            document.getElementById('newsPreferencesForm').addEventListener('submit', savePreferences);
+        }
+
+        function populateCategories() {
+            const grid = document.getElementById('categoriesGrid');
+            grid.innerHTML = '';
+            
+            newsCategories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-blue-50 transition cursor-pointer';
+                categoryCard.innerHTML = `
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="categories" value="${category}" class="mr-3 preference-toggle">
+                        <span class="font-medium">${category}</span>
+                    </label>
+                `;
+                grid.appendChild(categoryCard);
+            });
+        }
+
+        function populateCountries() {
+            const select = document.getElementById('countrySelect');
+            select.innerHTML = '<option value="">Select Country</option>';
+            
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.toLowerCase().replace(' ', '-');
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        }
+
+        function loadLiveNews() {
+            const feed = document.getElementById('liveNewsFeed');
+            feed.innerHTML = '';
+            
+            liveNewsData.forEach((news, index) => {
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card bg-gray-50 border border-gray-200 rounded-lg p-6 hover:border-blue-300';
+                newsCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">${news.category}</span>
+                        <span class="text-gray-500 text-sm">${news.time}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 hover:text-blue-600 transition">${news.title}</h3>
+                    <p class="text-gray-600 mb-4 line-clamp-3">${news.summary}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Source: ${news.source}</span>
+                        <a href="${news.url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                            Read Full Story <i class="fas fa-external-link-alt ml-2"></i>
+                        </a>
+                    </div>
+                `;
+                feed.appendChild(newsCard);
+            });
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        function handleGoogleSignIn(response) {
+            if (response.credential) {
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                currentUser = {
+                    name: payload.name,
+                    email: payload.email,
+                    picture: payload.picture
+                };
+                
+                updateUIAfterLogin();
+                hideLoginModal();
+            }
+        }
+
+        function updateUIAfterLogin() {
+            // Update header
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userSection').classList.remove('hidden');
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userPhoto').src = currentUser.picture;
+            
+            // Update profile section
+            document.getElementById('guestProfile').style.display = 'none';
+            document.getElementById('userProfile').classList.remove('hidden');
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profilePhoto').src = currentUser.picture;
+            
+            // Show preferences panel
+            document.getElementById('loginGate').style.display = 'none';
+            document.getElementById('preferencesPanel').classList.remove('hidden');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            
+            // Reset UI
+            document.getElementById('loginBtn').style.display = 'inline-block';
+            document.getElementById('userSection').classList.add('hidden');
+            document.getElementById('guestProfile').style.display = 'block';
+            document.getElementById('userProfile').classList.add('hidden');
+            document.getElementById('loginGate').style.display = 'block';
+            document.getElementById('preferencesPanel').classList.add('hidden');
+        }
+
+        function savePreferences(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showLoginModal();
+                return;
+            }
+            
+            const formData = new FormData(e.target);
+            const categories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
+            
+            userPreferences = {
+                email: currentUser.email,
+                categories: categories,
+                region: document.getElementById('regionSelect').value,
+                country: document.getElementById('countrySelect').value,
+                frequency: formData.get('frequency'),
+                newsCount: document.getElementById('newsCount').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Here you would typically send to your Apps Script backend
+            // google.script.run.saveUserPreferences(userPreferences);
+            
+            showNotification('Preferences saved successfully!', 'success');
+        }
+
+        function deleteAllPreferences() {
+            if (!currentUser) {
+                showLoginModal();
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete all your preferences? This action cannot be undone.')) {
+                // Reset form
+                document.getElementById('newsPreferencesForm').reset();
+                document.querySelectorAll('input[name="categories"]').forEach(cb => cb.checked = false);
+                
+                userPreferences = {};
+                
+                // Here you would typically send to your Apps Script backend
+                // google.script.run.deleteUserPreferences(currentUser.email);
+                
+                showNotification('All preferences deleted successfully!', 'info');
+            }
+        }
+
+        function sendNewsletterNow() {
+            if (!currentUser) {
+                showLoginModal();
+                return;
+            }
+            
+            const btn = document.getElementById('sendNowBtn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Sent Successfully!';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }, 1500);
+            
+            showNotification('Newsletter sent to your email!', 'success');
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('readingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Articles Read',
+                        data: [12, 19, 8, 15, 7, 23, 18],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateKPIs() {
+            // Simulate real-time KPI updates
+            const totalUsers = document.getElementById('totalUsers');
+            const activeSubscriptions = document.getElementById('activeSubscriptions');
+            const newsDelivered = document.getElementById('newsDelivered');
+            
+            if (totalUsers) {
+                const currentValue = parseInt(totalUsers.textContent.replace(',', ''));
+                totalUsers.textContent = (currentValue + Math.floor(Math.random() * 5)).toLocaleString();
+            }
+            
+            if (activeSubscriptions) {
+                const currentValue = parseInt(activeSubscriptions.textContent.replace(',', ''));
+                activeSubscriptions.textContent = (currentValue + Math.floor(Math.random() * 3)).toLocaleString();
+            }
+            
+            if (newsDelivered) {
+                const currentValue = parseInt(newsDelivered.textContent.replace(',', ''));
+                newsDelivered.textContent = (currentValue + Math.floor(Math.random() * 10)).toLocaleString();
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Simulated Google Sign-In for demo purposes
+        window.handleGoogleSignIn = function(response) {
+            // For demo, create a sample user
+            currentUser = {
+                name: 'John Doe',
+                email: 'john.doe@example.com',
+                picture: 'https://via.placeholder.com/80x80/4F46E5/FFFFFF?text=JD'
+            };
+            updateUIAfterLogin();
+            hideLoginModal();
+        };
+    </script>
+</body>
+</html>
